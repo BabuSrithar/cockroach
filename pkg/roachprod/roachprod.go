@@ -46,6 +46,7 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/roachprod/vm"
 	"github.com/cockroachdb/cockroach/pkg/roachprod/vm/aws"
 	"github.com/cockroachdb/cockroach/pkg/roachprod/vm/azure"
+	"github.com/cockroachdb/cockroach/pkg/roachprod/vm/ccloud"
 	"github.com/cockroachdb/cockroach/pkg/roachprod/vm/flagstub"
 	"github.com/cockroachdb/cockroach/pkg/roachprod/vm/gce"
 	"github.com/cockroachdb/cockroach/pkg/roachprod/vm/ibm"
@@ -2018,6 +2019,11 @@ func InitProviders() map[string]string {
 			name:  ibm.ProviderName,
 			init:  ibm.Init,
 			empty: &ibm.Provider{},
+		},
+		{
+			name:  ccloud.ProviderName,
+			init:  ccloud.Init,
+			empty: &ccloud.Provider{},
 		},
 		{
 			name: local.ProviderName,
