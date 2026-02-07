@@ -1,0 +1,32 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "ccloud",
+    srcs = [
+        "provider.go",
+        "provider_opts.go",
+    ],
+    importpath = "github.com/cockroachdb/cockroach/pkg/roachprod/vm/ccloud",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/roachprod/logger",
+        "//pkg/roachprod/vm",
+        "//pkg/roachprod/vm/flagstub",
+        "@com_github_cockroachdb_errors//:errors",
+        "@com_github_spf13_pflag//:pflag",
+    ],
+)
+
+go_test(
+    name = "ccloud_test",
+    srcs = [
+        "provider_test.go",
+    ],
+    embed = [":ccloud"],
+    deps = [
+        "//pkg/roachprod/logger",
+        "//pkg/roachprod/vm",
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
+    ],
+)
