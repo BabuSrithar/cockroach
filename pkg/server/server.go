@@ -129,6 +129,7 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/util/schedulerlatency"
 	"github.com/cockroachdb/cockroach/pkg/util/startup"
 	"github.com/cockroachdb/cockroach/pkg/util/stop"
+	"github.com/cockroachdb/cockroach/pkg/util/sysutil"
 	"github.com/cockroachdb/cockroach/pkg/util/timeutil"
 	"github.com/cockroachdb/cockroach/pkg/util/timeutil/ptp"
 	"github.com/cockroachdb/cockroach/pkg/util/tracing"
@@ -2109,6 +2110,8 @@ func (s *topLevelServer) PreStart(ctx context.Context) error {
 	// was done prior to start and record any actions appropriately.
 	logPendingLossOfQuorumRecoveryEvents(workersCtx, s.node.stores)
 
+	logNUMATopology(ctx)
+
 	// Report server listen addresses to logs.
 	log.Ops.Infof(ctx, "starting %s server at %s (use: %s)",
 		redact.Safe(s.cfg.HTTPRequestScheme()), log.SafeManaged(s.cfg.HTTPAddr), log.SafeManaged(s.cfg.HTTPAdvertiseAddr))
@@ -2601,4 +2604,26 @@ func (p cpuMetricsProvider) GetCPUUsage() (totalCPUTime time.Duration, err error
 
 func (p cpuMetricsProvider) GetCPUCapacity() (cpuCapacity float64) {
 	return status.GetCPUCapacity()
+}
+
+func logNUMATopology(ctx context.Context) {
+	topology, available, err := sysutil.GetNUMATopology()
+	if !available {
+		return
+	}
+	if err != nil {
+		log.Ops.Warningf(ctx, "unable to read NUMA topology: %v", err)
+	}
+	if len(topology.Nodes) > 0 {
+		log.Ops.Infof(ctx, "detected NUMA topology: %s", log.SafeManaged(topology.String()))
+	}
+	if topology.SpansMultipleNodes() {
+		allowed := topology.AllowedNodesSummary()
+		if allowed == "" {
+			allowed = "multiple nodes"
+		}
+		log.Ops.Warningf(ctx,
+			"process allowed to run on multiple NUMA nodes (mems_allowed_list=%s)",
+			log.SafeManaged(allowed))
+	}
 }
