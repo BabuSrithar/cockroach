@@ -11,6 +11,7 @@ tools:
   - search
   - execute
   - "github/*"
+  - "fetch/*"
 target: github-copilot
 infer: false
 ---
