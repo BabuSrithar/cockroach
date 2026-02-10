@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -73,7 +74,7 @@ func getNUMATopology(basePath string) (*NUMATopology, error) {
 		}
 		var nodeID int
 		// The regexp guarantees a valid non-negative integer.
-		fmt.Sscanf(m[1], "%d", &nodeID)
+		nodeID, _ = strconv.Atoi(m[1])
 
 		cpulistPath := filepath.Join(basePath, e.Name(), "cpulist")
 		data, err := os.ReadFile(cpulistPath)
