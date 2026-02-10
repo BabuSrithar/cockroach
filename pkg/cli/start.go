@@ -50,6 +50,7 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/util/sdnotify"
 	"github.com/cockroachdb/cockroach/pkg/util/stop"
 	"github.com/cockroachdb/cockroach/pkg/util/syncutil"
+	"github.com/cockroachdb/cockroach/pkg/util/system"
 	"github.com/cockroachdb/cockroach/pkg/util/sysutil"
 	"github.com/cockroachdb/cockroach/pkg/util/timeutil"
 	"github.com/cockroachdb/cockroach/pkg/util/tracing"
@@ -499,6 +500,24 @@ func runStartInternal(
 	// TODO(bilal): various global settings have already been initialized based on
 	// GOMAXPROCS(0) by now.
 	cgroups.AdjustMaxProcs(ctx)
+
+	// Detect and log NUMA topology if applicable.
+	// NUMA (Non-Uniform Memory Access) awareness is important for performance,
+	// as cross-NUMA memory accesses can be expensive. The Go runtime is not
+	// currently NUMA-aware, so we log a warning if the process is running
+	// across multiple NUMA domains.
+	if topology, err := system.GetNUMATopology(); err == nil {
+		log.Dev.Infof(ctx, "NUMA topology: %s", topology.String())
+		if topology.ProcessSpansNodes {
+			log.Ops.Warningf(ctx,
+				"process is running across multiple NUMA nodes (%s); "+
+					"this may result in reduced performance due to cross-NUMA memory access. "+
+					"Consider constraining the process to a single NUMA node using CPU affinity settings.",
+				topology.String())
+		}
+	} else {
+		log.Dev.Infof(ctx, "NUMA topology detection: %v", err)
+	}
 
 	fs := cliflagcfg.FlagSetForCmd(cmd)
 

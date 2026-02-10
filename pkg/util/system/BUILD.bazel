@@ -1,4 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "system",
@@ -6,8 +6,22 @@ go_library(
         "cache_line.go",
         "endian.go",
         "num_cpu.go",
+        "numa.go",
+        "numa_notlinux.go",
     ],
     importpath = "github.com/cockroachdb/cockroach/pkg/util/system",
     visibility = ["//visibility:public"],
-    deps = ["@org_golang_x_sys//cpu"],
+    deps = [
+        "@com_github_cockroachdb_errors//:errors",
+        "@org_golang_x_sys//cpu",
+    ],
+)
+
+go_test(
+    name = "system_test",
+    srcs = ["numa_test.go"],
+    deps = [
+        ":system",
+        "@com_github_stretchr_testify//require",
+    ],
 )
