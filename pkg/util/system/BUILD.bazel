@@ -7,11 +7,11 @@ go_library(
         "endian.go",
         "num_cpu.go",
         "numa.go",
+        "numa_notlinux.go",
     ],
     importpath = "github.com/cockroachdb/cockroach/pkg/util/system",
     visibility = ["//visibility:public"],
     deps = [
-        "//pkg/util/log",
         "@com_github_cockroachdb_errors//:errors",
         "@org_golang_x_sys//cpu",
     ],
