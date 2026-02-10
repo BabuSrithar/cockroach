@@ -822,6 +822,8 @@ func (s *SQLServerWrapper) PreStart(ctx context.Context) error {
 		s.cfg.ExternalIODir,
 	)
 
+	logNUMATopology(ctx)
+
 	// Report server listen addresses to logs.
 	log.Ops.Infof(ctx, "starting %s server at %s (use: %s)",
 		redact.Safe(s.sqlServer.cfg.HTTPRequestScheme()),
