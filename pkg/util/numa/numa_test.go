@@ -1,4 +1,4 @@
-// Copyright 2025 The Cockroach Authors.
+// Copyright 2026 The Cockroach Authors.
 //
 // Use of this software is governed by the CockroachDB Software License
 // included in the /LICENSE file.
@@ -88,7 +88,7 @@ func TestGetNUMATopology(t *testing.T) {
 				}
 			}
 
-			topo, err := getNUMATopology(basePath)
+			topo, err := GetNUMATopology(basePath)
 			if tc.wantErr != "" {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.wantErr)

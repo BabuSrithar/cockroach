@@ -1,4 +1,4 @@
-// Copyright 2025 The Cockroach Authors.
+// Copyright 2026 The Cockroach Authors.
 //
 // Use of this software is governed by the CockroachDB Software License
 // included in the /LICENSE file.
@@ -48,16 +48,11 @@ func (t *NUMATopology) String() string {
 // integer.
 var nodeRegexp = regexp.MustCompile(`^node(\d+)$`)
 
-const sysfsNodePath = "/sys/devices/system/node"
+const SysfsNodePath = "/sys/devices/system/node"
 
-// GetNUMATopology reads the NUMA topology from the system's sysfs.
-func GetNUMATopology() (*NUMATopology, error) {
-	return getNUMATopology(sysfsNodePath)
-}
-
-// getNUMATopology is the internal implementation that accepts a configurable
-// base path for testability.
-func getNUMATopology(basePath string) (*NUMATopology, error) {
+// GetNUMATopology reads the NUMA topology from the given sysfs node directory.
+// Use SysfsNodePath as the basePath for the standard location.
+func GetNUMATopology(basePath string) (*NUMATopology, error) {
 	entries, err := os.ReadDir(basePath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "reading NUMA sysfs directory %s", basePath)

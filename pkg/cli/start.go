@@ -1366,13 +1366,19 @@ func reportConfiguration(ctx context.Context) {
 	// Log the NUMA topology so that operators can correlate potential
 	// performance issues with cross-NUMA-domain scheduling by the Go runtime,
 	// which is not currently NUMA-aware.
-	if topo, err := numa.GetNUMATopology(); err == nil {
+	topo, err := numa.GetNUMATopology(numa.SysfsNodePath)
+	if err != nil {
+		if !oserror.IsNotExist(err) {
+			log.Ops.Warningf(ctx, "unable to read NUMA topology: %v", err)
+		}
+	} else {
 		log.Ops.Infof(ctx, "NUMA topology: %s", redact.Safe(topo.String()))
 		if len(topo.Nodes) > 1 {
 			log.Ops.Shoutf(ctx, severity.WARNING,
 				"running across %d NUMA nodes. The Go runtime does not have NUMA "+
-					"awareness; consider using numactl to bind this process to a single "+
-					"NUMA node for improved performance.", len(topo.Nodes))
+					"awareness (see https://github.com/golang/go/issues/28808); consider "+
+					"using numactl to bind this process to a single NUMA node for "+
+					"improved performance.", len(topo.Nodes))
 		}
 	}
 }
