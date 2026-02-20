@@ -47,6 +47,7 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/util/log"
 	"github.com/cockroachdb/cockroach/pkg/util/log/logcrash"
 	"github.com/cockroachdb/cockroach/pkg/util/log/severity"
+	"github.com/cockroachdb/cockroach/pkg/util/numa"
 	"github.com/cockroachdb/cockroach/pkg/util/sdnotify"
 	"github.com/cockroachdb/cockroach/pkg/util/stop"
 	"github.com/cockroachdb/cockroach/pkg/util/syncutil"
@@ -1361,6 +1362,25 @@ func reportConfiguration(ctx context.Context) {
 	// uid/gid across runs in the same data directory. To determine
 	// this, it's easier if the information appears in the log file.
 	log.Ops.Infof(ctx, "process identity: %s", log.SafeManaged(sysutil.ProcessIdentity()))
+
+	// Log the NUMA topology so that operators can correlate potential
+	// performance issues with cross-NUMA-domain scheduling by the Go runtime,
+	// which is not currently NUMA-aware.
+	topo, err := numa.GetNUMATopology(numa.SysfsNodePath)
+	if err != nil {
+		if !oserror.IsNotExist(err) {
+			log.Ops.Warningf(ctx, "unable to read NUMA topology: %v", err)
+		}
+	} else {
+		log.Ops.Infof(ctx, "NUMA topology: %s", redact.Safe(topo.String()))
+		if len(topo.Nodes) > 1 {
+			log.Ops.Shoutf(ctx, severity.WARNING,
+				"running across %d NUMA nodes. The Go runtime does not have NUMA "+
+					"awareness (see https://github.com/golang/go/issues/28808); consider "+
+					"using numactl to bind this process to a single NUMA node for "+
+					"improved performance.", len(topo.Nodes))
+		}
+	}
 }
 
 func maybeWarnMemorySizes(ctx context.Context) {
